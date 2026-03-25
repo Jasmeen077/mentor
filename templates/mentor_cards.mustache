@@ -1,0 +1,29 @@
+<div class="mentor-wrapper">
+    {{#mentors}}
+    <div class="mentor-card">
+
+        <div class="mentor-top">
+            <div class="mentor-info">
+                <h4>{{firstname}} {{lastname}}</h4>
+            </div>
+        </div>
+
+        <div class="mentor-body">
+            <p><strong>Email:</strong> {{email}}</p>
+            <p><strong>Department:</strong> {{department}}</p>
+            <p><strong>Interest:</strong> {{interests}}</p>
+
+            <div class="mentor-rating">
+                ★★★★★
+            </div>
+            <small>5.0 Rating</small>
+        </div>
+
+        <div class="mentor-footer">
+           <a href="{{config.wwwroot}}/local/mentor/rating.php?userid={{id}}" class="rate-btn">Rate Mentor</a>
+            <a href="{{config.wwwroot}}/message/index.php?id={{id}}" class="rate-btnn">Ask Question</a>
+        </div>
+
+    </div>
+    {{/mentors}}
+</div>

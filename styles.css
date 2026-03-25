@@ -1,0 +1,98 @@
+.mentor-heading {
+    text-align: center;
+    color: #ff0000;
+    font-size: 20px;
+}
+
+.mentor-wrapper {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+}
+
+.mentor-card {
+    width: 350px;
+    padding: 20px;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: 0.3s ease;
+    border: 1px solid #ff0000;
+}
+
+.mentor-card:hover {
+    transform: translateY(-5px);
+}
+
+.mentor-top {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.mentor-img {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ddd;
+}
+
+.mentor-info h4 {
+    margin: 0;
+    font-size: 18px;
+    color: #222;
+}
+
+.mentor-role {
+    display: inline-block;
+    margin-top: 5px;
+    background: #ff0000;
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+.mentor-body p {
+    margin: 8px 0;
+    font-size: 14px;
+    color: #555;
+}
+
+.mentor-footer {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    /* buttons ke beech gap */
+}
+
+.rate-btn,
+.rate-btnn {
+    display: inline-block;
+    background: #ff0000;
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: 0.3s ease;
+}
+
+.rate-btnn{
+    background: #005bb5 !important;
+}
+
+.rate-btn:hover,
+.rate-btnn:hover {
+    background: #005bb5;
+    color: #fff;
+}
+
+.mentor-rating {
+    font-size: 20px;
+    color: #f4b400;
+    margin-top: 10px;
+    letter-spacing: 2px;
+}
