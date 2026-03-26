@@ -21,31 +21,31 @@ $fieldid = $DB->get_field('user_info_field', 'id', ['shortname' => 'ratings']);
 
 foreach ($mentors as $mentor) {
 
-    $mentor->bio = strip_tags($mentor->bio ?? '');
-    $mentor->expertise = strip_tags($mentor->expertise ?? '');
+  $mentor->bio = strip_tags($mentor->bio ?? '');
+  $mentor->expertise = strip_tags($mentor->expertise ?? '');
 
-    $rating = round($mentor->averagerating ?? 0);
-    $mentor->stars = str_repeat('★', $rating) . str_repeat('☆', 5 - $rating);
+  $rating = round($mentor->averagerating ?? 0);
+  $mentor->stars = str_repeat('★', $rating) . str_repeat('☆', 5 - $rating);
 
-    if ($fieldid) {
+  if ($fieldid) {
 
-        $existing = $DB->get_record('user_info_data', [
-            'userid' => $mentor->id,
-            'fieldid' => $fieldid
-        ]);
+    $existing = $DB->get_record('user_info_data', [
+      'userid' => $mentor->id,
+      'fieldid' => $fieldid
+    ]);
 
-        $profiledata = new stdClass();
-        $profiledata->userid = $mentor->id;
-        $profiledata->fieldid = $fieldid;
-        $profiledata->data = $mentor->averagerating ?? 0;
+    $profiledata = new stdClass();
+    $profiledata->userid = $mentor->id;
+    $profiledata->fieldid = $fieldid;
+    $profiledata->data = $mentor->averagerating ?? 0;
 
-        if ($existing) {
-            $profiledata->id = $existing->id;
-            $DB->update_record('user_info_data', $profiledata);
-        } else {
-            $DB->insert_record('user_info_data', $profiledata);
-        }
+    if ($existing) {
+      $profiledata->id = $existing->id;
+      $DB->update_record('user_info_data', $profiledata);
+    } else {
+      $DB->insert_record('user_info_data', $profiledata);
     }
+  }
 }
 
 $output = $PAGE->get_renderer('local_mentor');
