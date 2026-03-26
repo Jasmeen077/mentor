@@ -16,15 +16,9 @@ $PAGE->set_pagelayout('standard');
 $PAGE->requires->css('/local/mentor/styles.css');
 
 $mentors = \local_mentor\mentor_queries::get_mentors($USER->id);
-// $mentors = $DB->get_records_sql($sql, ['userid' => $USER->id]);
-foreach ($mentors as $mentor) {
-  $mentor->bio = strip_tags($mentor->bio);
-  $mentor->expertise = strip_tags($mentor->expertise);
+$fieldid = $DB->get_field('user_info_field', 'id', ['shortname' => 'ratings']);
 
-  $rating = round($mentor->averagerating);
-  $mentor->stars = str_repeat('★', $rating) . str_repeat('☆', 5 - $rating);
-
-  $fieldid = $DB->get_field('user_info_field', 'id', ['shortname' => 'ratings']);
+if ($fieldid) {
 
   $existing = $DB->get_record('user_info_data', [
     'userid' => $mentor->id,
@@ -34,7 +28,7 @@ foreach ($mentors as $mentor) {
   $profiledata = new stdClass();
   $profiledata->userid = $mentor->id;
   $profiledata->fieldid = $fieldid;
-  $profiledata->data = $mentor->averagerating;
+  $profiledata->data = $mentor->averagerating ?? 0;
 
   if ($existing) {
     $profiledata->id = $existing->id;
