@@ -17,6 +17,7 @@ $PAGE->requires->css('/local/mentor/styles.css');
 
 $mentors = \local_mentor\mentor_queries::get_mentors($USER->id);
 
+
 $fieldid = $DB->get_field('user_info_field', 'id', ['shortname' => 'ratings']);
 
 foreach ($mentors as $mentor) {
