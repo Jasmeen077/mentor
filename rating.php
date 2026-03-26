@@ -46,6 +46,7 @@ if ($mform->is_cancelled()) {
     }
 }
 
+
 echo $OUTPUT->header();
 echo html_writer::tag('p', get_string('welcome', 'local_mentor'), ['class' => 'mentor-heading']);
 $mform->display();
