@@ -356,7 +356,7 @@ class observer
                     color:#ffffff;
                     font-size:12px;
                 ">
-                    © IDSLMS | Internal Learning Platform
+                    © IDSLMS | Internal Learning Platform | https://idslms.dev.idslogic.net/
                 </div>
 
             </div>
