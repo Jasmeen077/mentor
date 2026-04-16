@@ -27,4 +27,8 @@ $observers = [
         'eventname' => '\core\event\role_assigned',
         'callback' => '\local_mentor\observer::user_email',
     ],
+    [
+        'eventname' => '\mod_feedback\event\response_submitted',
+        'callback'  => '\local_mentor\observer::feedback_submitted',
+    ],
 ];
