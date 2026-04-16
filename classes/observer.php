@@ -63,8 +63,12 @@ class observer
 
         error_log('user_email triggered');
 
-        $userid = $event->relateduserid;
+        $userid   = $event->relateduserid;
         $courseid = $event->courseid;
+        $context  = $event->context;
+
+        // Get teacher roles
+        $roles = $DB->get_records_list('role', 'archetype', ['teacher', 'editingteacher']);
 
         $student = $DB->get_record('user', ['id' => $userid]);
         $course = $DB->get_record('course', ['id' => $courseid]);
@@ -500,16 +504,13 @@ class observer
                     'courseid' => $courseid
                 ]);
 
-                if (!$mentor) {
-                    $record = new \stdClass();
-                    $record->userid = $userid;
-                    $record->courseid = $courseid;
-                    $record->rating = 0;
+                $record = new \stdClass();
+                $record->userid   = $userid;
+                $record->courseid = $courseid;
+                $record->rating   = 0;
+                $record->timecreated = time();
 
-                    $DB->insert_record('local_mentor', $record);
-                }
-
-                break;
+                $DB->insert_record('local_mentor', $record);
             }
         }
 
@@ -627,106 +628,113 @@ class observer
         );
     }
 
-    public static function user_email(\core\event\role_assigned $event)
+    public static function user_email(\core\event\user_enrolment_created $event)
     {
         global $DB;
 
-        error_log('role_assigned triggered');
+        error_log('user_email triggered');
 
         $userid = $event->relateduserid;
         $courseid = $event->courseid;
-        $roleid = $event->objectid;
 
         $student = $DB->get_record('user', ['id' => $userid]);
         $course = $DB->get_record('course', ['id' => $courseid]);
 
         $context = \context_course::instance($courseid);
-
         if (!$context) {
+            error_log('Context not found');
             return;
         }
 
-        // ✅ Message by role directly
-        if ($roleid == 3 || $roleid == 4) {
-            $mainmessage = 'Welcome New Mentor to Enroll the Course.';
-        } elseif ($roleid == 5) {
-            $mainmessage = 'A new employee has been enrolled in your assigned course.';
-        } else {
-            return;
-        }
-
-        // Teachers fetch
+        // Teachers (editing = 3, non-editing = 4)
         $editingteachers = get_role_users(3, $context);
         $noneditingteachers = get_role_users(4, $context);
-
         $teachers = array_merge($editingteachers, $noneditingteachers);
 
+        // Remove duplicates
         $uniqueTeachers = [];
         foreach ($teachers as $teacher) {
             $uniqueTeachers[$teacher->id] = $teacher;
         }
 
-        $sender = $DB->get_record('user', ['id' => 2]);
+        // Sender user (admin)
+        $sender = $DB->get_record('user', ['id' => 12]);
 
+        // ===== Notify Teachers =====
         foreach ($uniqueTeachers as $teacher) {
-
-            $subject = 'Enrollment Notification - IDSLMS';
+            $subject = 'New Employee Enrollment Notification - IDSLMS';
 
             $messagehtml = '
         <div style="font-family:Arial,sans-serif; border:1px solid #ddd; padding:20px; max-width:600px;">
-
-            <div style="background:#0d6efd; color:white; padding:12px; font-size:18px;">
+            <div style="background:#e10018; color:white; padding:12px; font-size:18px;">
                 IDSLMS Enrollment Notification
             </div>
 
-            <p style="color:#d63384;">
-                <strong>Dear ' . $teacher->firstname . ',</strong>
-            </p>
+            <p style="color:#d63384;"><strong>Dear ' . $teacher->firstname . ',</strong></p>
 
-            <p>' . $mainmessage . '</p>
+            <p>A new employee has enrolled in your assigned course.</p>
 
             <table style="width:100%; border-collapse:collapse;">
-
                 <tr>
-                    <td style="padding:8px; border:1px solid #ddd;">
-                        <strong>User Name</strong>
-                    </td>
-                    <td style="padding:8px; border:1px solid #ddd; color:red;">
-                        ' . $student->firstname . ' ' . $student->lastname . '
-                    </td>
+                    <td style="padding:8px; border:1px solid #ddd;"><strong>Employee Name</strong></td>
+                    <td style="padding:8px; border:1px solid #ddd; color:red;">' . $student->firstname . ' ' . $student->lastname . '</td>
                 </tr>
-
                 <tr>
-                    <td style="padding:8px; border:1px solid #ddd;">
-                        <strong>Course Name</strong>
-                    </td>
-                    <td style="padding:8px; border:1px solid #ddd; color:blue;">
-                        ' . $course->fullname . '
-                    </td>
+                    <td style="padding:8px; border:1px solid #ddd;"><strong>Course Name</strong></td>
+                    <td style="padding:8px; border:1px solid #ddd; color:blue;">' . $course->fullname . '</td>
                 </tr>
-
             </table>
 
             <p style="margin-top:20px;">
-                Regards,<br>
+                Regards,<br><br>
                 <strong>IDSLMS Team</strong>
             </p>
-
         </div>';
 
-            $messagetext = $mainmessage . ' ' .
-                $student->firstname . ' ' . $student->lastname .
-                ' in ' . $course->fullname;
+            $messagetext = 'Dear ' . $teacher->firstname . ',
+' . $student->firstname . ' ' . $student->lastname . ' enrolled in ' . $course->fullname . '.';
 
-            email_to_user(
-                $teacher,
-                $sender,
-                $subject,
-                $messagetext,
-                $messagehtml
-            );
+            $result = email_to_user($teacher, $sender, $subject, $messagetext, $messagehtml);
+            error_log('Teacher mail status: ' . ($result ? 'sent' : 'failed'));
         }
+
+        // ===== Notify Student =====
+        $subject_student = 'Enrollment Confirmation - ' . $course->fullname;
+
+        $messagehtml_student = '
+    <div style="font-family:Arial,sans-serif; border:1px solid #ddd; padding:20px; max-width:600px;">
+        <div style="background:#e10018; color:white; padding:12px; font-size:18px;">
+            IDSLMS Enrollment Confirmation
+        </div>
+
+        <p style="color:#0d6efd;"><strong>Dear ' . $student->firstname . ',</strong></p>
+
+        <p>Congratulations! You have been successfully enrolled in the following course:</p>
+
+        <table style="width:100%; border-collapse:collapse;">
+            <tr>
+                <td style="padding:8px; border:1px solid #ddd;"><strong>Course Name</strong></td>
+                <td style="padding:8px; border:1px solid #ddd; color:blue;">' . $course->fullname . '</td>
+            </tr>
+            <tr>
+                <td style="padding:8px; border:1px solid #ddd;"><strong>Start Date</strong></td>
+                <td style="padding:8px; border:1px solid #ddd; color:green;">' . date('d M Y') . '</td>
+            </tr>
+        </table>
+
+        <p style="margin-top:20px;">
+            We wish you a great learning experience!<br><br>
+            <strong>IDSLMS Team</strong>
+        </p>
+    </div>';
+
+        $messagetext_student = 'Dear ' . $student->firstname . ',
+       You have successfully enrolled in ' . $course->fullname . '.';
+
+        $result_student = email_to_user($student, $sender, $subject_student, $messagetext_student, $messagehtml_student);
+        error_log('Student mail status: ' . ($result_student ? 'sent' : 'failed'));
     }
+
 
     //assignment  submission
     public static function assignment_submit_mail($event)
@@ -763,6 +771,11 @@ class observer
         }
 
         $context = \context_course::instance($courseid);
+        if (!$courseid) {
+            return;
+        }
+
+        $context = \context_course::instance($courseid, IGNORE_MISSING);
 
         $editingteachers = get_role_users(3, $context);
         $noneditingteachers = get_role_users(4, $context);
