@@ -28,6 +28,7 @@ $observers = [
         'callback' => '\local_mentor\observer::user_email',
     ],
     [
+<<<<<<< HEAD
         'eventname' => '\core\event\user_enrolment_created',
         'callback' => '\local_mentor\observer::user_email',
     ],
@@ -40,6 +41,8 @@ $observers = [
         'callback' => '\local_mentor\observer::assignment_submit_mail',
     ],
     [
+=======
+>>>>>>> main
         'eventname' => '\mod_feedback\event\response_submitted',
         'callback'  => '\local_mentor\observer::feedback_submitted',
     ],
