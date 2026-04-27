@@ -14,49 +14,63 @@ defined('MOODLE_INTERNAL') || die();
  * Mentor Report Details Table Class
  * 
  * @package local_mentor
- * @author Mohan Lal Sharma <mohan.sharma@idslms.com> April 2026
+ * @author Jasmeen Khanam <jasmeen.khanam@idslogic.com> April 2026
  */
 class mentor_report_details extends sql_table
 {
-    public function __construct(string $uniqueid, moodle_url| string $baseurl)
+    public function __construct(string $uniqueid, moodle_url|string $baseurl, $userid)
     {
         parent::__construct($uniqueid);
 
         $headers = [
             'name' => get_string('name'),
             'email' => get_string('email'),
-            'course' => get_string('courses'),
+            'course' => get_string('course', 'local_mentor'),
             'rating' => get_string('rating', 'local_mentor'),
+            'comment' => get_string('comment', 'local_mentor'),
             'timecreated' => get_string('timecreated', 'local_mentor')
         ];
 
         $this->define_columns(array_keys($headers));
         $this->define_headers(array_values($headers));
 
-        $fields = "u.id as id, u.email AS email, GROUP_CONCAT(DISTINCT c.fullname) AS courses,
-         COUNT(lmr.id) AS totalratings, AVG(lmr.rate) AS rating, MAX(lmr.timecreated) AS last_updated";
+        $fields = "lmr.id as lmrid, 
+               u.id,
+               u.firstname,
+               u.lastname,
+               u.firstnamephonetic,
+               u.lastnamephonetic,
+               u.middlename,
+               u.alternatename,
+               u.email,
+               c.fullname AS course,
+               lmr.rate AS rating,
+               lmr.reason AS comment,
+               lmr.timecreated";
 
-        $from = "{local_mentor} lm
-                JOIN {local_mentor_rates_log} lmr ON lm.id = lmr.mentor_id
-                JOIN {user} u ON u.id = lm.userid
-                AND u.deleted = 0
-                LEFT JOIN {course} c oN c.id = lm.courseid";
+        $from = "{local_mentor_rates_log} lmr
+             JOIN {local_mentor} lm ON lm.id = lmr.mentor_id
+             JOIN {user} u ON u.id = lm.userid
+             LEFT JOIN {course} c ON c.id = lm.courseid";
 
-        $where = "u.deleted = 0 GROUP BY u.id";
-        $this->set_sql($fields, $from, $where, []);
-        $this->set_count_sql("SELECT COUNT(DISTINCT u.id) FROM " . $from, []);
+        $where = "u.id = :userid";
+
+        $params = ['userid' => $userid];
+
+        $this->set_sql($fields, $from, $where, $params);
+
+        $this->set_count_sql("SELECT COUNT(1)
+                          FROM {local_mentor_rates_log} lmr
+                          JOIN {local_mentor} lm ON lm.id = lmr.mentor_id
+                          WHERE lm.userid = :userid", $params);
 
         $this->define_baseurl($baseurl);
-
         $this->collapsible(false);
     }
 
-    /**
-     * user name
-     */
     public function col_name($values)
     {
-        return parent::col_fullname(\core\user::get_user($values->id));
+        return fullname($values);
     }
 
     public function col_rating($values)
@@ -64,13 +78,9 @@ class mentor_report_details extends sql_table
         return round($values->rating, 2);
     }
 
-
-    public function col_last_updated($values)
+    public function col_timecreated($values)
     {
-        if ($values->last_updated) {
-            return userdate($values->last_updated);
-        }
-        return 'N/A';
+        return userdate($values->timecreated, '%d %B %Y, %I:%M %p');
     }
 
     public function col_actions($values)

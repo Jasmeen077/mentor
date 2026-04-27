@@ -27,7 +27,7 @@ class mentor
 			expertisedata.data AS expertise,
 			interestdata.interests,
 			GROUP_CONCAT(DISTINCT c.fullname SEPARATOR ', ') AS courses,
-			AVG(lm.rating) AS averagerating
+			ROUND(AVG(lm.rating), 1) AS averagerating
 		FROM
 			{local_mentor} lm
 			JOIN {user} u ON u.id = lm.userid
