@@ -30,5 +30,27 @@ if ($ADMIN->fulltree) {
         $choices,
     ));
 
+    // Create messages and subjects for the events and notifications
+    $settings->add(new admin_setting_heading(
+        'local_mentor/role_assigned_messages',
+        'Role assigned message templates',
+        'Configure role assigned and unassgined messages templates'
+    ));
+
+    // role assignment settings
+    $settings->add(new admin_setting_configtext(
+        'local_mentor/role_assigned_subject',
+        'Role assgined subject',
+        'Use variables like {firstname}, {lastname} {coursename}',
+        'Hi {firstname}'
+    ));
+
+    $settings->add(new admin_setting_confightmleditor(
+        'local_mentor/role_assigned_body',
+        'Role assignement body',
+        'Message body with placeholders like {role}, {firstname}, {lastname}, {email}, {coursename}, {courseid}',
+        'Hi {firstname}, you assigned a new role ({assignmentname}) in {coursename}'
+    ));
+
     $ADMIN->add('localplugins', $settings);
 }

@@ -21,9 +21,16 @@
  * @copyright  2026 Jasmeen Khanam <jasmeen.khanam@idslogic.com>
  */
 
-$messageproviders = array (
+$messageproviders = array(
 
     'unenrol_notification' => [
+        'defaults' => [
+            'popup' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED,
+            'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED,
+        ],
+    ],
+
+    'notification' => [
         'defaults' => [
             'popup' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED,
             'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_ENABLED,

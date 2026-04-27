@@ -17,6 +17,15 @@ class observer
     public static function role_assigned_observer(role_assigned $event)
     {
         self::make_mentors($event);
+
+        $customdata =   [
+            'event' => 'role_assigned',
+            'userid' => $event->relateduserid,
+            'courseid' => $event->courseid,
+            'roleid' => $event->objectid,
+        ];
+
+        self::add_message_in_queue($customdata);
     }
 
     /**
@@ -337,5 +346,14 @@ class observer
         if (in_array($roleid, $roleids)) {
             mentor::make_mentor($userid, $courseid);
         }
+    }
+
+    public static function add_message_in_queue(array $customdata)
+    {
+
+        $task = new \local_mentor\task\send_notification_task();
+        $task->set_custom_data($customdata);
+
+        \core\task\manager::queue_adhoc_task($task);
     }
 }
