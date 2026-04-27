@@ -10,28 +10,17 @@ class mentor_form extends \moodleform
 {
     public function definition()
     {
-        global $DB, $USER;
-
         $mform = $this->_form;
 
-        // Hidden user ID
         $userid = $this->_customdata['userid'];
+        $courses = $this->_customdata['courses'];
 
         $mform->addElement('hidden', 'userid', $userid);
         $mform->setType('userid', PARAM_INT);
 
-        // Get courses enrolled by user
-        $sql = "SELECT c.id, c.fullname
-                  FROM {course} c
-                  JOIN {enrol} e ON e.courseid = c.id
-                  JOIN {user_enrolments} ue ON ue.enrolid = e.id
-                 WHERE ue.userid = :userid
-              ORDER BY c.fullname ASC";
-        $courses = $DB->get_records_sql($sql, ['userid' => $USER->id]);
-
         $options = ['' => 'Select Course'];
-        foreach ($courses as $course) {
-            $options[$course->id] = $course->fullname;
+        foreach ($courses as $id => $name) {
+            $options[$id] = $name;
         }
 
         // Course dropdown
@@ -67,11 +56,10 @@ class mentor_form extends \moodleform
             $errors['rating'] = 'Please provide a rating';
         }
 
-        $wordcount = str_word_count(strip_tags($data['reason']));
-        if ($wordcount < 30) {
-            $errors['reason'] = 'Comment must be at least 30 words';
-        } elseif ($wordcount > 200) {
-            $errors['reason'] = 'Comment cannot exceed 200 words';
+        if (strlen($data['reason']) < 30) {
+            $errors['reason'] = 'Comment must be at least 30 letters';
+        } elseif (strlen($data['reason']) > 300) {
+            $errors['reason'] = 'Comment cannot exceed 300 letters';
         }
 
         return $errors;

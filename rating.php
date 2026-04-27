@@ -2,7 +2,7 @@
 require_once('../../config.php');
 require_once($CFG->dirroot . '/local/mentor/classes/form/mentor_form.php');
 
-global $DB, $USER, $OUTPUT, $PAGE;
+global $DB, $OUTPUT, $PAGE;
 
 require_login();
 
@@ -10,42 +10,27 @@ $userid = required_param('userid', PARAM_INT);
 
 $PAGE->set_url(new moodle_url('/local/mentor/rating.php', ['userid' => $userid]));
 $PAGE->set_context(context_system::instance());
-$PAGE->set_title('Rate the Mentors');
+$PAGE->set_title(get_string('rate_mentors', 'local_mentor'));
+$PAGE->set_heading(get_string('rate_mentors', 'local_mentor'));
 
-$mform = new \local_mentor\form\mentor_form(null, ['userid' => $userid]);
+$courses = \local_mentor\mentor::get_courses_list_for_rating($userid);
 
-if ($mform->is_cancelled()) {
-    redirect(new moodle_url('/my'));
-} elseif ($data = $mform->get_data()) {
-
-    $record = new stdClass();
-    $record->userid = $data->userid;
-    $record->courseid = $data->courseid;
-    $record->rating = $data->rating;
-    $record->timecreated = time();
-    $record->timemodified = time();
-
-    try {
-        $mentorid = $DB->insert_record('local_mentor', $record);
-
-        $log = new stdClass();
-        $log->mentor_id = $mentorid;
-        $log->rate = $data->rating;
-        $log->reason = $data->reason;
-        $log->timecreated = time();
-
-        $DB->insert_record('local_mentor_rates_log', $log);
-
-        redirect(new moodle_url('/my'), 'Feedback submitted successfully');
-    } catch (\dml_exception $e) {
-        echo $OUTPUT->header();
-        echo $OUTPUT->notification('Error saving feedback: ' . $e->getMessage(), 'notifyproblem');
-        $mform->display();
-        echo $OUTPUT->footer();
-        exit;
-    }
+if (empty($courses)) {
+    throw new moodle_exception('duplicate', 'local_mentor');
 }
 
+$mform = new \local_mentor\form\mentor_form(null, ['userid' => $userid, 'courses' => $courses]);
+
+if ($mform->is_cancelled()) {
+    redirect(new moodle_url('/local/mentor/index.php'));
+} elseif ($data = $mform->get_data()) {
+
+    if (local_mentor\mentor::save_rating($data->userid, $data->courseid, $data->rating, $data->reason)) {
+        redirect(new moodle_url('/local/mentor/index.php'), get_string('feedbacksaved', 'local_mentor'), null, \core\output\notification::NOTIFY_SUCCESS);
+    } else {
+        redirect(new moodle_url('/local/mentor/rating.php', ['userid' => $userid]), get_string('feedbacksaveerror', 'local_mentor'), null, \core\output\notification::NOTIFY_ERROR);
+    }
+}
 
 echo $OUTPUT->header();
 echo html_writer::tag('p', get_string('welcome', 'local_mentor'), ['class' => 'mentor-heading']);

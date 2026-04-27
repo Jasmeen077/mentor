@@ -1,20 +1,23 @@
-<<<<<<< Updated upstream
 <?php
 $string['pluginname'] = 'Mentor';
 $string['mentor:view'] = 'View mentor plugin';
-$string['mentors'] = 'Mentors';
+$string['mentors'] = 'mentors';
+$string['mentorslist'] = 'Mentors List';
 $string['welcome'] = 'Welcome to the Mentors Page, where you can provide ratings for the mentor of your ongoing course by selecting the relevant course name.';
 $string['feedback_success'] = 'Feedback submitted successfully.';
 $string['learnupskills'] = 'Learn & Upskills';
 $string['course'] = 'Course';
-=======
-<?php
-$string['pluginname'] = 'Mentor';
-$string['mentor:view'] = 'View mentor plugin';
-$string['mentors'] = 'Mentors';
-$string['welcome'] = 'Welcome to the Mentors Page, where you can provide ratings for the mentor of your ongoing course by selecting the relevant course name.';
-$string['feedback_success'] = 'Feedback submitted successfully.';
-$string['learnupskills'] = 'Learn & Upskills';
-
+$string['upandskillscategories'] = 'Learn & Upskills Categories';
+$string['upandskillscategories_description'] = 'Select categories to be displayed in Learn & Upskills menu.';
+$string['mentorsreport'] = 'Mentors Report';
 $string['messageprovider:unenrol_notification'] =  'Unerolment Notification';
->>>>>>> Stashed changes
+$string['totalratings'] = 'Total Ratings';
+$string['rating'] = 'Rating';
+$string['last_updated'] = 'Last Rated';
+$string['actions'] = 'Actions';
+$string['mentor_report_details'] = 'Mentor Report Details';
+$string['mentor_report_details_description'] = 'Detailed report of mentor ratings and feedback.';
+$string['viewdetails'] = 'View Details';
+$string['feedbacksaved'] = 'Feedback saved successfully.';
+$string['feedbacksaveerror'] = 'Error saving feedback. Please try again.';
+$string['rate_mentors'] = 'Rate Mentors';
