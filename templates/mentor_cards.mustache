@@ -1,6 +1,6 @@
 <div class="mentor-wrapper">
     {{#mentors}}
-    <div class="mentor-card">
+    <div class="mentor-card card ">
 
         <div class="mentor-top">
             <div class="mentor-info">
@@ -9,23 +9,33 @@
         </div>
 
         <div class="mentor-body">
-            <p><strong>Email:</strong> {{email}}</p>
-            <p><strong>Department:</strong> {{department}}</p>
-            <p><strong>Interest:</strong> {{interests}}</p>
-            <p><strong>Expertise:</strong> <span>{{expertise}}</span></p>
-            <p><strong>Bio:</strong> <span>{{bio}}</span></p>
+            <p><span class="font-weight-bold">Email:</span> {{email}}</p>
+            <p><span class="font-weight-bold">Department:</span> {{department}}</p>
+            <p><span class="font-weight-bold">Interest:</span> {{interests}}</p>
+            <p><span class="font-weight-bold">Expertise:</span> <span>{{expertise}}</span></p>
+            <p><span class="font-weight-bold">Bio:</span> <span>{{bio}}</span></p>
+            <p><span class="font-weight-bold">Courses:</span> <span>{{courses}}</span></p>
 
-            <div class="mentor-rating">
-                {{stars}}
+            <div class="mentor-rating d-flex justify-content-between align-items-center">
+                <p>{{stars}}</p>
+                <p class="small text-muted">{{averagerating}} Rating</p>
             </div>
-            <small>{{averagerating}} Rating</small>
         </div>
-
-        <div class="mentor-footer">
-           <a href="{{config.wwwroot}}/local/mentor/rating.php?userid={{id}}" class="rate-btn">⭐Rate Mentor</a>
-           <a href="{{config.wwwroot}}/message/index.php?id={{id}}" class="rate-btnn">💬 Chat</a>
+        <hr class="my-2">
+        <div class="mentor-footer d-flex justify-content-between align-items-center">
+            {{#can_rate}}
+            <a href="{{config.wwwroot}}/local/mentor/rating.php?userid={{id}}" class="btn btn-primary w-100">⭐Rate
+                Mentor</a>
+            {{/can_rate}}
+            <a href="{{config.wwwroot}}/message/index.php?id={{id}}" class="btn btn-secondary w-100">💬 Chat</a>
         </div>
 
     </div>
+    {{/mentors}}
+
+    {{^mentors}}
+        <div class="alert alert-info" role="alert">
+            <p>No mentors found.</p>
+        </div>
     {{/mentors}}
 </div>

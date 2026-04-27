@@ -4,11 +4,31 @@ namespace local_mentor\output;
 
 defined('MOODLE_INTERNAL') || die();
 
-class renderer extends \plugin_renderer_base
+/**
+ * Renderere class
+ * 
+ * @package local_mentor
+ * @author 2026 Mohan Lal Sharma & Jasmeen Khanam <mohan.sharma@idslogic.com & jasmeen.khanam@idslogic.com>
+ */
+class renderer extends \core\output\renderer_base
 {
 
-    public function render_mentor_cards($mentors)
+    public function render_mentor_cards(): string|bool
     {
+
+        $mentors = \local_mentor\mentor::get_mentors();
+        $enroledcoursesandteachers = \local_mentor\helper::get_user_courses_with_teachers();
+
+        foreach ($mentors as $mentor) {
+
+            $mentor->bio = strip_tags($mentor->bio ?? 'N/A');
+            $mentor->expertise = strip_tags($mentor->expertise ?? 'N/A');
+
+            $rating = round($mentor->averagerating ?? 0);
+            $mentor->stars = str_repeat('★', $rating) . str_repeat('☆', 5 - $rating);
+            // Verify if the current user can rate this mentor
+            $mentor->can_rate = $enroledcoursesandteachers && array_key_exists($mentor->id, $enroledcoursesandteachers);
+        }
         $data = [
             'mentors' => array_values($mentors)
         ];

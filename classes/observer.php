@@ -8,11 +8,15 @@ defined('MOODLE_INTERNAL') || die();
 
 class observer
 {
+    /**
+     * observer for sending email and make mentor if user assigned role of teacher
+     * 
+     * @param \core\event\role_assigned $event
+     * @return void
+     */
     public static function user_email(\core\event\role_assigned $event)
     {
         global $DB;
-
-        error_log('role_assigned triggered');
 
         $userid = $event->relateduserid;
         $courseid = $event->courseid;
@@ -26,11 +30,13 @@ class observer
         if (!$context) {
             return;
         }
+        // Mentors role ids
+        $mentorroleids = $DB->get_field_sql('SELECT id FROM {role} WHERE archetype IN (?,?) ', ['teacher', 'editingteacher']);
+        $employeeroleids = $DB->get_field_sql('SELECT id FROM {role} WHERE archetype IN (?,?) ', ['student']);
 
-        // ✅ Message by role directly
-        if ($roleid == 3 || $roleid == 4) {
+        if (in_array($roleid, $mentorroleids)) {
             $mainmessage = 'Welcome New Mentor to Enroll the Course.';
-        } elseif ($roleid == 5) {
+        } elseif (in_array($roleid, $employeeroleids)) {
             $mainmessage = 'A new employee has been enrolled in your assigned course.';
         } else {
             return;

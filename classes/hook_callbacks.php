@@ -28,7 +28,7 @@ class hook_callbacks
         if ($issiteadmin) {
             $node = $hook->primaryview->add(
                 get_string('mentorsreport', 'local_mentor'),
-                new moodle_url('/local/mentor/report.php'),
+                new moodle_url('/local/mentor/report/mentor_ratings.php'),
                 navigation_node::TYPE_CUSTOM,
                 null,
                 'local_mentor_primary'
@@ -44,7 +44,7 @@ class hook_callbacks
         }
 
 
-        if ($node && $PAGE->url->compare(new moodle_url('/local/mentor/index.php')) || $PAGE->url->compare(new moodle_url('/local/mentor/report.php'))) {
+        if ($node && $PAGE->url->compare(new moodle_url('/local/mentor/index.php')) || $PAGE->url->compare(new moodle_url('/local/mentor/report/mentor_ratings.php'))) {
             $node->make_active();
         }
     }

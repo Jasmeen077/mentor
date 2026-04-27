@@ -33,4 +33,37 @@ class helper
         $sql = "SELECT id, name FROM {course_categories} WHERE id $sqlin";
         return $DB->get_records_sql($sql, $params);
     }
+
+    /**
+     * Get current user`s courses and teachers
+     * @return array List of courses with teachers
+     */
+    public static function get_user_courses_with_teachers(): array
+    {
+        global $USER, $DB;
+
+        // Get all enrolled courses for current user
+        $courses = enrol_get_users_courses($USER->id, true);
+
+        $teacherdata = [];
+
+        foreach ($courses as $course) {
+
+            // Get teachers (editingteacher + teacher roles)
+            $context = \context_course::instance($course->id);
+
+            $roleids = $DB->get_fieldset_select('role', 'id', "archetype IN ('editingteacher', 'teacher')");
+            $teachers = get_role_users(
+                $roleids,
+                $context,
+                false,
+                'ra.id, u.id, u.firstname, u.lastname, u.email'
+            );
+
+            foreach ($teachers as $teacher) {
+                $teacherdata[$teacher->id][$course->id] = $course->fullname;
+            }
+        }
+        return $teacherdata;
+    }
 }
