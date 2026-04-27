@@ -57,11 +57,11 @@ class helper
                 $roleids,
                 $context,
                 false,
-                'ra.id, u.id, u.firstname, u.lastname, u.email'
+                'ra.id as raid, u.id as uid, u.firstname, u.lastname, u.email'
             );
 
             foreach ($teachers as $teacher) {
-                $teacherdata[$teacher->id][$course->id] = $course->fullname;
+                $teacherdata[$teacher->uid][$course->id] = $course->fullname;
             }
         }
         return $teacherdata;
