@@ -2,6 +2,9 @@
 
 namespace local_mentor;
 
+use core\event\role_unassigned;
+use stdClass;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -144,5 +147,44 @@ class mentor
 			AND m.userid = :mentorid";
 
 		return $DB->get_records_sql_menu($sql, ['userid' => $USER->id, 'mentorid' => $mentorid]);
+	}
+
+	/**
+	 * Create a mentor
+	 */
+	public static function make_mentor(int $userid, int $courseid)
+	{
+		global $DB;
+
+		$record = new stdClass();
+		$record->userid = $userid;
+		$record->courseid = $courseid;
+		$record->rating = 0;
+		$record->timecreated = time();
+		$record->timemodified = time();
+
+		if (!$DB->record_exists('local_mentor', ['courseid' => $courseid, 'userid' => $userid])) {
+			$DB->insert_record('local_mentor', $record);
+		}
+	}
+
+	/**
+	 * Delete mentor.
+	 * 
+	 * @param role_unassigned $event
+	 */
+	public static function delete_mentor(role_unassigned $event)
+	{
+		global $DB;
+		$userid = $event->relateduserid;
+		$courseid = $event->courseid;
+
+		// TODO: Please check if user has mulitple roles then check that role
+
+		if ($DB->record_exists('local_mentor', ['userid' => $userid, 'courseid' => $courseid])) {
+			$DB->delete_records('local_mentor', ['userid' => $userid, 'courseid' => $courseid]);
+
+			// TODO: delete logs through scheduled task for fast performances;
+		}
 	}
 }

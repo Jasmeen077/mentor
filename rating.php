@@ -13,6 +13,7 @@ $PAGE->set_context(context_system::instance());
 $PAGE->set_title(get_string('rate_mentors', 'local_mentor'));
 $PAGE->set_heading(get_string('rate_mentors', 'local_mentor'));
 
+//TODO: Check and prevent duplicate submitions
 $courses = \local_mentor\mentor::get_courses_list_for_rating($userid);
 
 if (empty($courses)) {

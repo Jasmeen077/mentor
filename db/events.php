@@ -13,10 +13,14 @@ $observers = [
         'callback' => '\local_mentor\observer\enroll::user_unenrolled',
     ],
 
-    // Role assigned events
+    // Role assigned and unassinged events
     [
         'eventname' => '\core\event\role_assigned',
-        'callback' => '\local_mentor\observer::user_email',
+        'callback' => '\local_mentor\observer::role_assigned_observer',
+    ],
+    [
+        'eventname' => '\core\event\role_unassigned',
+        'callback' => '\local_mentor\observer::role_unassigned_observer',
     ],
 
     // Activity events

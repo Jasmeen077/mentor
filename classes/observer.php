@@ -2,117 +2,42 @@
 
 namespace local_mentor;
 
-use core_user;
+use core\event\role_assigned;
 
 defined('MOODLE_INTERNAL') || die();
 
 class observer
 {
     /**
-     * observer for sending email and make mentor if user assigned role of teacher
+     * Observ role assigned event.
      * 
      * @param \core\event\role_assigned $event
      * @return void
      */
-    public static function user_email(\core\event\role_assigned $event)
+    public static function role_assigned_observer(role_assigned $event)
     {
-        global $DB;
+        self::make_mentors($event);
 
-        $userid = $event->relateduserid;
-        $courseid = $event->courseid;
-        $roleid = $event->objectid;
+        $customdata =   [
+            'event' => 'role_assigned',
+            'userid' => $event->relateduserid,
+            'courseid' => $event->courseid,
+            'roleid' => $event->objectid,
+        ];
 
-        $student = $DB->get_record('user', ['id' => $userid]);
-        $course = $DB->get_record('course', ['id' => $courseid]);
+        self::add_message_in_queue($customdata);
+    }
 
-        $context = \context_course::instance($courseid);
-
-        if (!$context) {
-            return;
-        }
-        // Mentors role ids
-        $mentorroleids = $DB->get_field_sql('SELECT id FROM {role} WHERE archetype IN (?,?) ', ['teacher', 'editingteacher']);
-        $employeeroleids = $DB->get_field_sql('SELECT id FROM {role} WHERE archetype IN (?,?) ', ['student']);
-
-        if (in_array($roleid, $mentorroleids)) {
-            $mainmessage = 'Welcome New Mentor to Enroll the Course.';
-        } elseif (in_array($roleid, $employeeroleids)) {
-            $mainmessage = 'A new employee has been enrolled in your assigned course.';
-        } else {
-            return;
-        }
-
-        // Teachers fetch
-        $editingteachers = get_role_users(3, $context);
-        $noneditingteachers = get_role_users(4, $context);
-
-        $teachers = array_merge($editingteachers, $noneditingteachers);
-
-        $uniqueTeachers = [];
-        foreach ($teachers as $teacher) {
-            $uniqueTeachers[$teacher->id] = $teacher;
-        }
-
-        $sender = $DB->get_record('user', ['id' => 2]);
-
-        foreach ($uniqueTeachers as $teacher) {
-
-            $subject = 'Enrollment Notification - IDSLMS';
-
-            $messagehtml = '
-        <div style="font-family:Arial,sans-serif; border:1px solid #ddd; padding:20px; max-width:600px;">
-
-            <div style="background:#0d6efd; color:white; padding:12px; font-size:18px;">
-                IDSLMS Enrollment Notification
-            </div>
-
-            <p style="color:#d63384;">
-                <strong>Dear ' . $teacher->firstname . ',</strong>
-            </p>
-
-            <p>' . $mainmessage . '</p>
-
-            <table style="width:100%; border-collapse:collapse;">
-
-                <tr>
-                    <td style="padding:8px; border:1px solid #ddd;">
-                        <strong>User Name</strong>
-                    </td>
-                    <td style="padding:8px; border:1px solid #ddd; color:red;">
-                        ' . $student->firstname . ' ' . $student->lastname . '
-                    </td>
-                </tr>
-
-                <tr>
-                    <td style="padding:8px; border:1px solid #ddd;">
-                        <strong>Course Name</strong>
-                    </td>
-                    <td style="padding:8px; border:1px solid #ddd; color:blue;">
-                        ' . $course->fullname . '
-                    </td>
-                </tr>
-
-            </table>
-
-            <p style="margin-top:20px;">
-                Regards,<br>
-                <strong>IDSLMS Team</strong>
-            </p>
-
-        </div>';
-
-            $messagetext = $mainmessage . ' ' .
-                $student->firstname . ' ' . $student->lastname .
-                ' in ' . $course->fullname;
-
-            email_to_user(
-                $teacher,
-                $sender,
-                $subject,
-                $messagetext,
-                $messagehtml
-            );
-        }
+    /**
+     * Observer role unassigned event
+     * 
+     * @param \core\event\role_unassigned $event
+     * 
+     * @return void
+     */
+    public static function role_unassigned_observer(\core\event\role_unassigned $event)
+    {
+        mentor::delete_mentor($event);
     }
 
     //assignment  submission
@@ -403,5 +328,32 @@ class observer
             strip_tags($usermessage),
             $usermessage
         );
+    }
+
+
+    /**
+     * Make mentor if user has teache or editing teacher role
+     */
+    public static function make_mentors(role_assigned $event)
+    {
+        global $DB;
+        $userid = $event->relateduserid;
+        $courseid = $event->courseid;
+        $roleid = $event->objectid;
+
+        $roleids = $DB->get_records_sql_menu('SELECT shortname, id FROM {role} WHERE archetype IN (?, ?)', ['editingteacher', 'teacher']);
+
+        if (in_array($roleid, $roleids)) {
+            mentor::make_mentor($userid, $courseid);
+        }
+    }
+
+    public static function add_message_in_queue(array $customdata)
+    {
+
+        $task = new \local_mentor\task\send_notification_task();
+        $task->set_custom_data($customdata);
+
+        \core\task\manager::queue_adhoc_task($task);
     }
 }
