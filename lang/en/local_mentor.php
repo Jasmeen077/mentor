@@ -25,3 +25,4 @@ $string['mentorreportdetails'] = 'Mentor Report Details';
 $string['timecreated'] = 'Date';
 $string['course'] = 'Course';
 $string['comment'] = 'Comment';
+$string['alreadyrated'] = 'You have been already rated for this mentor';

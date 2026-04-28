@@ -27,7 +27,7 @@ class renderer extends \core\output\renderer_base
             $rating = round($mentor->averagerating ?? 0);
             $mentor->stars = str_repeat('★', $rating) . str_repeat('☆', 5 - $rating);
             // Verify if the current user can rate this mentor
-            $mentor->can_rate = $enroledcoursesandteachers && array_key_exists($mentor->id, $enroledcoursesandteachers);
+            $mentor->can_rate = $enroledcoursesandteachers && $mentor->has_rate_count;
         }
         $data = [
             'mentors' => array_values($mentors)

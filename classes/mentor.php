@@ -30,9 +30,14 @@ class mentor
 			expertisedata.data AS expertise,
 			interestdata.interests,
 			GROUP_CONCAT(DISTINCT c.fullname SEPARATOR ', ') AS courses,
-			ROUND(AVG(lm.rating), 1) AS averagerating
+			ROUND(AVG(lm.rating), 1) AS averagerating,
+			CASE
+				WHEN COUNT(lm.courseid) > COUNT(l.id) THEN 1
+				ELSE 0
+			END as has_rate_count
 		FROM
 			{local_mentor} lm
+			LEFT JOIN {local_mentor_rates_log} l ON l.mentor_id = lm.id AND l.userid = :userid
 			JOIN {user} u ON u.id = lm.userid
 			JOIN {course} c ON c.id = lm.courseid 
 			LEFT JOIN (
@@ -135,7 +140,7 @@ class mentor
             ) as coursename
         FROM
             {local_mentor} m
-            JOIN {course} c ON c.id = m.courseid
+           JOIN {course} c ON c.id = m.courseid
             AND c.visible = 1
         WHERE
             m.id NOT IN(

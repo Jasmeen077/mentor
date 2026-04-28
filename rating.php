@@ -17,7 +17,7 @@ $PAGE->set_heading(get_string('rate_mentors', 'local_mentor'));
 $courses = \local_mentor\mentor::get_courses_list_for_rating($userid);
 
 if (empty($courses)) {
-    throw new moodle_exception('duplicate', 'local_mentor');
+    redirect(new moodle_url('/local/mentor/index.php'), get_string('alreadyrated', 'local_mentor'), null, \core\output\notification::NOTIFY_INFO);
 }
 
 $mform = new \local_mentor\form\mentor_form(null, ['userid' => $userid, 'courses' => $courses]);
