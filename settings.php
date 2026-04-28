@@ -52,5 +52,72 @@ if ($ADMIN->fulltree) {
         'Hi {firstname}, you assigned a new role ({assignmentname}) in {coursename}'
     ));
 
+    // settings for quiz
+    $settings->add(new admin_setting_heading(
+        'local_mentor/attempt_submitted_message',
+        'Quiz completion message template',
+        'Configure message shown when a user completes a quiz'
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'local_mentor/attempt_submitted_subject',
+        'Quiz completion subject',
+        'Use variables like {firstname}, {lastname}, {quizname}, {coursefullname}',
+        'Quiz completed: {quizname}'
+    ));
+
+    $settings->add(new admin_setting_confightmleditor(
+        'local_mentor/attempt_submitted_body',
+        'Quiz completion message body',
+        'Placeholders: {firstname}, {lastname}, {quizname}, {coursename}, {attemptid}',
+        'Hi {firstname}, congratulations! You have successfully completed the quiz <b>{quizname}</b> in course <b>{coursefullname}</b>. Your final grade is <b>{finalgrade}</b>.'
+    ));
+
+    //settings for assignment
+    $settings->add(new admin_setting_heading(
+        'local_mentor/assessable_submitted_message',
+        'Assignment completion message template',
+        'Configure message shown when a user completes an assignment'
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'local_mentor/assessable_submitted_subject',
+        'Assignment completion subject',
+        'Use variables like {firstname}, {lastname}, {assignmentname}, {coursename}',
+        'Assignment completed: {assignmentname}'
+    ));
+
+    $settings->add(new admin_setting_confightmleditor(
+        'local_mentor/assessable_submitted_body',
+        'Assignment completion message body',
+        'Placeholders: {firstname}, {lastname}, {assignmentname}, {coursename}, {grade}, {feedback}',
+        'Hi {firstname}, congratulations! You have successfully completed the assignment <b>{assignmentname}</b> in course <b>{coursefullname}</b>. Your grade is <b>{grade}</b>.'
+    ));
+
+    // settings for feedback
+    $settings->add(new admin_setting_heading(
+        'local_mentor/feedback_submission_message',
+        'Feedback submission message template',
+        'Configure message sent when feedback is submitted'
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'local_mentor/feedback_submit_subject',
+        'Feedback submission subject',
+        'Use variables like {firstname}, {lastname}, {coursefullname}',
+        'Feedback submitted successfully'
+    ));
+
+    $settings->add(new admin_setting_confightmleditor(
+        'local_mentor/feedback_body',
+        'Feedback Email Body',
+        'Use placeholders like {firstname}, {lastname}, {coursename}, {activityname}',
+        'Dear {firstname},<br><br>
+        Your feedback has been successfully submitted in <b>{activityname}</b> of course <b>{coursename}</b>.<br><br>
+        Thank you for your participation.<br><br>
+        Regards,<br>
+        LMS Team'
+    ));
+
     $ADMIN->add('localplugins', $settings);
 }

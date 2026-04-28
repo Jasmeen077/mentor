@@ -35,34 +35,35 @@ class mentor_report_details extends sql_table
         $this->define_headers(array_values($headers));
 
         $fields = "lmr.id as lmrid, 
-               u.id,
-               u.firstname,
-               u.lastname,
-               u.firstnamephonetic,
-               u.lastnamephonetic,
-               u.middlename,
-               u.alternatename,
-               u.email,
-               c.fullname AS course,
-               lmr.rate AS rating,
-               lmr.reason AS comment,
-               lmr.timecreated";
+           u.id,
+           u.firstname,
+           u.lastname,
+           u.firstnamephonetic,
+           u.lastnamephonetic,
+           u.middlename,
+           u.alternatename,
+           u.email,
+           c.fullname AS course,
+           lmr.rate AS rating,
+           lmr.reason AS comment,
+           lmr.timecreated";
 
         $from = "{local_mentor_rates_log} lmr
-             JOIN {local_mentor} lm ON lm.id = lmr.mentor_id
-             JOIN {user} u ON u.id = lm.userid
-             LEFT JOIN {course} c ON c.id = lm.courseid";
+         JOIN {local_mentor} lm ON lm.id = lmr.mentor_id
+         JOIN {user} u ON u.id = lmr.userid
+         LEFT JOIN {course} c ON c.id = lm.courseid";
 
-        $where = "u.id = :userid";
+        // ✅ IMPORTANT: mentor filter
+        $where = "lm.userid = :mentorid";
 
-        $params = ['userid' => $userid];
+        $params = ['mentorid' => $userid];
 
         $this->set_sql($fields, $from, $where, $params);
 
         $this->set_count_sql("SELECT COUNT(1)
-                          FROM {local_mentor_rates_log} lmr
-                          JOIN {local_mentor} lm ON lm.id = lmr.mentor_id
-                          WHERE lm.userid = :userid", $params);
+                      FROM {local_mentor_rates_log} lmr
+                      JOIN {local_mentor} lm ON lm.id = lmr.mentor_id
+                      WHERE lm.userid = :mentorid", $params);
 
         $this->define_baseurl($baseurl);
         $this->collapsible(false);

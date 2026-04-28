@@ -4,10 +4,12 @@
  * Message Manager class
  * 
  * @package local_mentor
- * @author Mohan Lal Sharma <mohan.sharma@idslogic.com>
+ * @author Mohan Lal Sharma & Jasmeen Khanam <mohan.sharma@idslogic.com & jasmeen.khanam@idslogic>
  */
 
 namespace local_mentor;
+
+use local_mentor\helper;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -57,6 +59,105 @@ class message_manager
         self::send('role_assigned', $user, $vars);
     }
 
+    /**
+     * handle quiz attempt submission message
+     */
+    private static function handle_attempt_submitted(array $data)
+    {
+        global $DB;
+
+        $user = $DB->get_record('user', ['id' => $data['userid']], '*', MUST_EXIST);
+
+        $course = $DB->get_record('course', ['id' => $data['courseid']], '*', MUST_EXIST);
+
+        $quiz = $DB->get_record_sql(
+            "SELECT q.name
+         FROM {quiz} q
+         JOIN {quiz_attempts} qa ON q.id = qa.quiz
+         WHERE qa.id = ?",
+            [$data['attemptid']]
+        );
+
+        $vars = [
+            'firstname'  => $user->firstname,
+            'lastname'   => $user->lastname,
+            'courseid'   => $course->id,
+            'coursename' => $course->fullname,
+            'quizname'   => $quiz ? $quiz->name : 'Quiz',
+            'attemptid'  => $data['attemptid']
+        ];
+
+        self::send('attempt_submitted', $user, $vars);
+
+        $teachers = helper::get_teacher($course->id);
+
+        if (empty($teachers)) {
+            error_log('No teachers found for course ID: ' . $course->id);
+            return;
+        }
+
+        $uniqueTeachers = [];
+        foreach ($teachers as $teacher) {
+            $uniqueTeachers[$teacher->id] = $teacher;
+        }
+
+        foreach ($uniqueTeachers as $teacher) {
+
+            if (empty($teacher->email)) {
+                continue;
+            }
+
+            self::send('quiz_teacher_notification', $teacher, $vars);
+        }
+    }
+
+    /**
+     * Handle assignment submission messages
+     * 
+     */
+
+    private static function handle_assessable_submitted(array $data)
+    {
+        global $DB;
+
+        $user = $DB->get_record('user', ['id' => $data['userid']], '*', MUST_EXIST);
+
+        $course = $DB->get_record('course', ['id' => $data['courseid']], '*', MUST_EXIST);
+
+        $assignment = $DB->get_record('assign', ['id' => $data['assignid']], '*', MUST_EXIST);
+
+        $vars = [
+            'firstname'      => $user->firstname,
+            'lastname'       => $user->lastname,
+            'courseid'       => $course->id,
+            'coursename'     => $course->fullname,
+            'assignmentname' => $assignment ? $assignment->name : 'Assignment',
+            'attemptid'      => $data['attemptid'] ?? null
+        ];
+
+        self::send('assessable_submitted', $user, $vars);
+
+        $teachers = helper::get_teacher($course->id);
+
+        if (empty($teachers)) {
+            error_log('No teachers found for course ID: ' . $course->id);
+            return;
+        }
+
+        $uniqueTeachers = [];
+        foreach ($teachers as $teacher) {
+            $uniqueTeachers[$teacher->id] = $teacher;
+        }
+
+        foreach ($uniqueTeachers as $teacher) {
+
+            if (empty($teacher->email)) {
+                continue;
+            }
+
+            self::send('assignment_teacher_notification', $teacher, $vars);
+        }
+    }
 
     /**
      * CORE SEND FUNCTION
