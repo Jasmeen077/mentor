@@ -15,6 +15,8 @@ class course_participants_table extends sql_table
 {
     public function __construct(string $uniqueid, url|string $url)
     {
+        global $USER, $DB;
+
         parent::__construct($uniqueid);
 
         $headers = [
@@ -23,17 +25,6 @@ class course_participants_table extends sql_table
             'course' => get_string('courseandrole', 'local_mentor'),
             'action' => get_string('action'),
         ];
-
-        $this->define_baseurl($url);
-        $this->define_columns(array_keys($headers));
-        $this->define_headers(array_values($headers));
-        $this->collapsible(false);
-        $this->no_sorting('action');
-    }
-
-    public function query_db($pagesize, $useinitialsbar = true)
-    {
-        global $DB;
 
         $fields = "
             u.id,
@@ -57,35 +48,26 @@ class course_participants_table extends sql_table
                 AND ctx.instanceid = c.id
             JOIN {role} r ON r.id = ra.roleid
         ";
-
         $where = "1=1";
+        $params = [];
 
-        $countsql = "SELECT COUNT(DISTINCT u.id) FROM $from WHERE $where";
-        $total = $DB->count_records_sql($countsql);
-
-        $this->pagesize($pagesize, $total);
-
-        $sql = "SELECT $fields
-                FROM $from
-                WHERE $where
-                GROUP BY u.id";
-
-
-        $sort = $this->get_sql_sort();
-
-        if (empty($sort)) {
-            $sort = " ORDER BY u.id DESC";
+        if (!is_siteadmin()) {
+            $courses = \local_mentor\helper::has_teacher_role_in_course($USER->id);
+            list($in_sql, $params) = $DB->get_in_or_equal(array_keys($courses), SQL_PARAMS_NAMED, 'c');
+            $where = 'c.id ' . $in_sql . ' ';
         }
 
-        $sql .= $sort;
 
-        $this->rawdata = $DB->get_records_sql(
-            $sql,
-            [],
-            $this->get_page_start(),
-            $this->get_page_size()
-        );
+        $this->set_count_sql("SELECT COUNT(DISTINCT u.id) FROM " . $from . " WHERE " . $where, $params);
+        $where .= " GROUP BY u.id";
+        $this->set_sql($fields, $from, $where, $params);
+        $this->define_baseurl($url);
+        $this->define_columns(array_keys($headers));
+        $this->define_headers(array_values($headers));
+        $this->collapsible(false);
+        $this->no_sorting('action');
     }
+
 
     public function col_name($row)
     {

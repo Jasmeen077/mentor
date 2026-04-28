@@ -75,14 +75,15 @@ class helper
      * Has teacher role of current user in any enroled courses. 
      * 
      * @param int $userid
-     * @return bool
+     * @return array|null
      */
-    public static function has_teacher_role_in_course(int $userid): bool
+    public static function has_teacher_role_in_course(int $userid): array|null
     {
         global $DB;
         $courses = enrol_get_users_courses($userid, true, 'id');
-        list($in_sql, $params) = $DB->get_in_or_equal($courses, SQL_PARAMS_NAMED, 'u', true);
-        $sql = "SELECT COUNT(1)
+
+        list($in_sql, $params) = $DB->get_in_or_equal(array_keys($courses), SQL_PARAMS_NAMED, 'c');
+        $sql = "SELECT ctx.instanceid as courseid
                 FROM
                     {context} ctx
                     JOIN {role_assignments} ra ON ra.contextid = ctx.id
@@ -93,13 +94,14 @@ class helper
                     AND r.archetype = 'editingteacher'
                     AND ra.userid = :userid;";
         $params["userid"] = $userid;
-        $record = $DB->get_record_sql($sql, $params);
+        $record = $DB->get_records_sql($sql, $params);
         return $record;
     }
 
     public static function can_access_participant_report(int $userid): bool
     {
-        return is_siteadmin($userid) || !!self::has_teacher_role_in_course($userid);
+        $courses = self::has_teacher_role_in_course($userid) ?: 0;
+        return is_siteadmin($userid) || $courses;
     }
 
     /**
