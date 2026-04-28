@@ -4,7 +4,7 @@ namespace local_mentor; // Yeh exact hona chahiye
 
 use core\hook\navigation\primary_extend;
 use navigation_node;
-use moodle_url;
+use core\url;
 
 class hook_callbacks
 {
@@ -19,6 +19,9 @@ class hook_callbacks
     {
         self::add_learn_and_upskills_tab($hook);
         self::add_mentors_tab($hook);
+
+        // Add course custom participants report in the primary navigation.
+        self::add_course_participants_menu($hook);
     }
 
     public static function add_mentors_tab(primary_extend $hook): void
@@ -28,7 +31,7 @@ class hook_callbacks
         if ($issiteadmin) {
             $node = $hook->primaryview->add(
                 get_string('mentorsreport', 'local_mentor'),
-                new moodle_url('/local/mentor/report/mentor_ratings.php'),
+                new url('/local/mentor/report/mentor_ratings.php'),
                 navigation_node::TYPE_CUSTOM,
                 null,
                 'local_mentor_primary'
@@ -36,7 +39,7 @@ class hook_callbacks
         } else {
             $node = $hook->primaryview->add(
                 get_string('mentors', 'local_mentor'),
-                new moodle_url('/local/mentor/index.php'),
+                new url('/local/mentor/index.php'),
                 navigation_node::TYPE_CUSTOM,
                 null,
                 'local_mentor_primary'
@@ -44,7 +47,7 @@ class hook_callbacks
         }
 
 
-        if ($node && $PAGE->url->compare(new moodle_url('/local/mentor/index.php')) || $PAGE->url->compare(new moodle_url('/local/mentor/report/mentor_ratings.php'))) {
+        if ($node && $PAGE->url->compare(new url('/local/mentor/index.php')) || $PAGE->url->compare(new url('/local/mentor/report/mentor_ratings.php'))) {
             $node->make_active();
         }
     }
@@ -60,7 +63,7 @@ class hook_callbacks
 
         $node = $hook->primaryview->add(
             get_string('learnupskills', 'local_mentor'),
-            new moodle_url('#'),
+            new url('#'),
             navigation_node::TYPE_CUSTOM,
             null,
             'local_mentor_primarymenu'
@@ -70,9 +73,36 @@ class hook_callbacks
         foreach ($categories as $category) {
             $node->add(
                 $category->name,
-                new moodle_url('/course/index.php', ['categoryid' => $category->id]),
+                new url('/course/index.php', ['categoryid' => $category->id]),
                 navigation_node::TYPE_CUSTOM
             );
+        }
+    }
+
+    /**
+     * Add course custom participants report in the primary navigation
+
+     * @param primary_extend $hook
+     * @return void
+     */
+    public static function add_course_participants_menu(primary_extend $hook)
+    {
+        global $USER, $PAGE;
+
+
+
+        if (helper::can_access_participant_report($USER->id)) {
+            $node = $hook->primaryview->add(
+                get_string('courseparticipants', 'local_mentor'),
+                new url('/local/mentor/report/participants.php'),
+                navigation_node::TYPE_CUSTOM,
+                null,
+                'local_mentor_participants'
+            );
+
+            if ($node && $PAGE->url->compare(new url('/local/mentor/reprot/participants.php'))) {
+                $node->make_active();
+            }
         }
     }
 }

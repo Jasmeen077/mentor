@@ -16,7 +16,7 @@ if ($ADMIN->fulltree) {
     $ADMIN->add('reports', new admin_externalpage(
         'local_mentor_participants',
         'Course Participants Report',
-        new \moodle_url('/local/mentor/course.php'),
+        new \moodle_url('/local/mentor/report/course.php'),
         'moodle/site:viewreports'
     ));
 
