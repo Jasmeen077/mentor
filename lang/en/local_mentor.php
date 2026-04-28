@@ -32,3 +32,5 @@ $string['unenrol'] = 'Unenrol user';
 $string['unenrolsuccessmessage'] = 'The user \'{$a->name}\' has successfully unenrol form the course: {$a->course}';
 $string['permission_denied'] = 'You do not have permission to access this page';
 $string['unenrolconfirm'] = 'Do you want to unenrol {$a->fullname} form the {$a->course}.';
+$string['admin_notification_receiver'] = 'Admin Notification Reveiver';
+$string['admin_notification_receiver_desc'] = 'Select Admins for sending the notification copy';
