@@ -51,6 +51,7 @@ class mentor_report extends sql_table
         $this->define_baseurl($baseurl);
 
         $this->collapsible(false);
+        $this->no_sorting('action');
     }
 
     /**

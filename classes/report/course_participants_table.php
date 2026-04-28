@@ -4,40 +4,37 @@ namespace local_mentor\report;
 
 require_once($CFG->libdir . '/tablelib.php');
 
-use table_sql;
-use html_writer;
-use moodle_url;
+use core\url;
+use core_table\sql_table;
+use stdClass;
+use \core\output\html_writer;
 
 defined('MOODLE_INTERNAL') || die();
 
-class course_participants_table extends table_sql
+class course_participants_table extends sql_table
 {
-    public function __construct($uniqueid)
+    public function __construct(string $uniqueid, url|string $url)
     {
         parent::__construct($uniqueid);
 
-        // =========================
-        // COLUMNS
-        // =========================
-        $this->define_columns(['name', 'email', 'course']);
-        $this->define_headers(['Name', 'Email', 'Courses & Roles']);
+        $headers = [
+            'name' => get_string('name'),
+            'email' => get_string('email'),
+            'course' => get_string('courseandrole', 'local_mentor'),
+            'action' => get_string('action'),
+        ];
 
-        global $PAGE;
-        $this->define_baseurl($PAGE->url);
-
-        // =========================
-        // PAGINATION
-        // =========================
-        $this->pagesize(20, 1000);
+        $this->define_baseurl($url);
+        $this->define_columns(array_keys($headers));
+        $this->define_headers(array_values($headers));
+        $this->collapsible(false);
+        $this->no_sorting('action');
     }
 
     public function query_db($pagesize, $useinitialsbar = true)
     {
         global $DB;
 
-        // =========================
-        // SAME SQL (OPTIMIZED)
-        // =========================
         $fields = "
             u.id,
             CONCAT(u.firstname, ' ', u.lastname) AS name,
@@ -45,7 +42,8 @@ class course_participants_table extends table_sql
             GROUP_CONCAT(
                 DISTINCT CONCAT(c.fullname, ' (', r.shortname, ')')
                 SEPARATOR '<br>'
-            ) AS course
+            ) AS course,
+                 GROUP_CONCAT(DISTINCT c.id SEPARATOR ',') as courseids
         ";
 
         $from = "
@@ -62,29 +60,18 @@ class course_participants_table extends table_sql
 
         $where = "1=1";
 
-        // =========================
-        // COUNT (FOR PAGINATION)
-        // =========================
-        $countsql = "SELECT COUNT(DISTINCT u.id) FROM $from WHERE 1=1";
+        $countsql = "SELECT COUNT(DISTINCT u.id) FROM $from WHERE $where";
         $total = $DB->count_records_sql($countsql);
 
         $this->pagesize($pagesize, $total);
 
-        // =========================
-        // MAIN QUERY
-        // =========================
         $sql = "SELECT $fields
                 FROM $from
                 WHERE $where
-                GROUP BY u.id, u.firstname, u.lastname, u.email";
+                GROUP BY u.id";
 
-        // =========================
-        // SAFE SORT FIX
-        // =========================
+
         $sort = $this->get_sql_sort();
-
-        // prevent Moodle wrong alias like emailname
-        $sort = str_replace('emailname', 'u.email', $sort);
 
         if (empty($sort)) {
             $sort = " ORDER BY u.id DESC";
@@ -92,9 +79,6 @@ class course_participants_table extends table_sql
 
         $sql .= $sort;
 
-        // =========================
-        // EXECUTE
-        // =========================
         $this->rawdata = $DB->get_records_sql(
             $sql,
             [],
@@ -103,22 +87,26 @@ class course_participants_table extends table_sql
         );
     }
 
-    // =========================
-    // CLICKABLE NAME
-    // =========================
     public function col_name($row)
     {
-        $url = new \moodle_url('/user/view.php', ['id' => $row->id]);
-        return html_writer::link($url, $row->name, ['style' => 'color:#e10018;']);
+        return parent::col_fullname(\core\user::get_user($row->id));
     }
 
-    public function col_email($row)
+    public function col_action(stdClass $row)
     {
-        return $row->email;
-    }
+        $actions = '';
+        $courseids = explode(',', $row->courseids);
+        $url = new url('/local/mentor/report/participants.php');
+        foreach ($courseids as $id) {
+            $params = [
+                'userid' => $row->id,
+                'courseid' => $id
+            ];
 
-    public function col_course($row)
-    {
-        return $row->course;
+            $url->params($params);
+            $actions .= html_writer::link($url, get_string('unenrol', 'local_mentor'));
+            $actions .= html_writer::empty_tag('br', ['class' => '']);
+        }
+        return $actions;
     }
 }

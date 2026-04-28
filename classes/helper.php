@@ -2,6 +2,10 @@
 
 namespace local_mentor;
 
+use core\url;
+use Exception;
+use stdClass;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -65,5 +69,71 @@ class helper
             }
         }
         return $teacherdata;
+    }
+
+    /**
+     * Has teacher role of current user in any enroled courses. 
+     * 
+     * @param int $userid
+     * @return bool
+     */
+    public static function has_teacher_role_in_course(int $userid): bool
+    {
+        global $DB;
+        $courses = enrol_get_users_courses($userid, true, 'id');
+        list($in_sql, $params) = $DB->get_in_or_equal($courses, SQL_PARAMS_NAMED, 'u', true);
+        $sql = "SELECT COUNT(1)
+                FROM
+                    {context} ctx
+                    JOIN {role_assignments} ra ON ra.contextid = ctx.id
+                    JOIN {role} r ON r.id = ra.roleid
+                WHERE
+                    ctx.contextlevel = 50
+                    AND ctx.instanceid $in_sql
+                    AND r.archetype = 'editingteacher'
+                    AND ra.userid = :userid;";
+        $params["userid"] = $userid;
+        $record = $DB->get_record_sql($sql, $params);
+        return $record;
+    }
+
+    public static function can_access_participant_report(int $userid): bool
+    {
+        return is_siteadmin($userid) || !!self::has_teacher_role_in_course($userid);
+    }
+
+    /**
+     * Unenrol user with all enrolments form the course
+     * 
+     * @param int $userid
+     * @param int $courseid
+     * @param url $url
+     * @return void
+     */
+    public static function unenrol_user_in_course(int $userid, int $courseid, url $url): void
+    {
+        global $DB;
+        $transaction = $DB->start_delegated_transaction();
+        try {
+            // Get all enrol instances for the course
+            $instances = enrol_get_instances($courseid, true);
+
+            foreach ($instances as $instance) {
+                $plugin = enrol_get_plugin($instance->enrol);
+
+                if ($plugin && $plugin->allow_unenrol($instance)) {
+                    $plugin->unenrol_user($instance, $userid);
+                }
+            }
+            $transaction->allow_commit();
+            $course = $DB->get_field('course', 'fullname', ['id' => $courseid]);
+            $a = new stdClass();
+            $a->name = fullname(\core\user::get_user($userid));
+            $a->course = format_string($course);
+
+            redirect($url, get_string('unenrolsuccessmessage', 'local_mentor', $a), null, \core\output\notification::NOTIFY_SUCCESS);
+        } catch (Exception $e) {
+            $transaction->rollback($e);
+        }
     }
 }
