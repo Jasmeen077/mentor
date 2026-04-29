@@ -38,114 +38,51 @@ class observer
     public static function role_unassigned_observer(\core\event\role_unassigned $event)
     {
         mentor::delete_mentor($event);
+
+        $customdata =   [
+            'event' => 'role_unassigned',
+            'userid' => $event->relateduserid,
+            'courseid' => $event->courseid,
+            'roleid' => $event->objectid,
+        ];
+
+        self::add_message_in_queue($customdata);
     }
 
     //assignment  submission
-    public static function assignment_submit_mail($event)
-    {
-        self::send_mail($event, 'Assignment');
-    }
-
-    //quiz subbmission
-    public static function quiz_submit_mail($event)
-    {
-        self::send_mail($event, 'Quiz');
-    }
-
-    private static function send_mail($event, $activitytype)
+    public static function assignment_submit_mail(\mod_assign\event\assessable_submitted $event)
     {
         global $DB;
 
-        error_log($activitytype . ' mail triggered');
+        $cmid = $event->contextinstanceid;
+        $cm = get_coursemodule_from_id('assign', $cmid, 0, false, MUST_EXIST);
+        $assign = $DB->get_record('assign', ['id' => $cm->instance], '*', MUST_EXIST);
 
-        $userid = $event->userid;
-        $courseid = $event->courseid;
+        $customdata = [
+            'event'     => 'assessable_submitted',
+            'userid'    => $event->userid,
+            'courseid'  => $event->courseid,
+            'assignid'  => $assign->id,
+            'attemptid' => $event->objectid,
+        ];
 
-        if (!$userid || !$courseid) {
-            error_log('Missing userid or courseid');
-            return;
-        }
+        self::add_message_in_queue($customdata);
+    }
 
-        $student = $DB->get_record('user', ['id' => $userid]);
-        $course = $DB->get_record('course', ['id' => $courseid]);
+    //quiz subbmission
+    public static function quiz_submit_mail(\mod_quiz\event\attempt_submitted $event)
+    {
+        error_log('Quiz attempt_submitted event triggered');
 
-        if (!$student || !$course) {
-            error_log('Student or course not found');
-            return;
-        }
+        $customdata = [
+            'event'     => 'attempt_submitted',
+            'userid'    => $event->userid,
+            'courseid'  => $event->courseid,
+            'attemptid' => $event->objectid,
+        ];
 
-        $context = \context_course::instance($courseid);
-
-        $editingteachers = get_role_users(3, $context);
-        $noneditingteachers = get_role_users(4, $context);
-
-        $teachers = array_merge($editingteachers ?: [], $noneditingteachers ?: []);
-
-        // Remove duplicates
-        $uniqueTeachers = [];
-        foreach ($teachers as $teacher) {
-            $uniqueTeachers[$teacher->id] = $teacher;
-        }
-
-        // ✅ Sender (ID 12)
-        $sender = $DB->get_record('user', ['id' => 12]);
-
-        // =========================
-        // 📧 MAIL TO TEACHERS
-        // =========================
-        foreach ($uniqueTeachers as $teacher) {
-
-            if (empty($teacher->email)) {
-                continue;
-            }
-
-            $subject = 'Employee ' . $activitytype . ' Submission Notification - IDSLMS';
-
-            $messagetext = $student->firstname . ' submitted ' . $activitytype . ' in ' . $course->fullname;
-
-            $messagehtml = '<p><b>' . $student->firstname . ' ' . $student->lastname . '</b> submitted ' . $activitytype . ' in <b>' . $course->fullname . '</b></p>';
-
-            email_to_user($teacher, $sender, $subject, $messagetext, $messagehtml);
-        }
-
-        // =========================
-        // 📧 MAIL TO STUDENT (NEW)
-        // =========================
-        if (!empty($student->email)) {
-
-            $student_subject = "Your {$activitytype} Submission Successful - IDSLMS";
-
-            $student_messagetext = "Your {$activitytype} has been submitted successfully in {$course->fullname}. Please continue with next activity.";
-
-            $student_messagehtml = '
-        <div style="font-family:Arial;padding:20px;">
-            <h2 style="color:#e10018;">Submission Successful 🎉</h2>
-
-            <p>Dear <b>' . $student->firstname . '</b>,</p>
-
-            <p>
-                Your <b>' . $activitytype . '</b> has been successfully submitted 
-                in <b>' . $course->fullname . '</b>.
-            </p>
-
-            <p>
-                Thank you! Please continue with the next activity 🚀
-            </p>
-
-            <br>
-            <p><b>IDS LMS Team</b></p>
-        </div>';
-
-            $result = email_to_user(
-                $student,
-                $sender,
-                $student_subject,
-                $student_messagetext,
-                $student_messagehtml
-            );
-
-            error_log("Student mail status: " . ($result ? 'SENT' : 'FAILED'));
-        }
+        self::add_message_in_queue($customdata);
+        // self::handle_attempt_submitted($customdata);
     }
 
     public static function feedback_submitted(\mod_feedback\event\response_submitted $event)
@@ -163,11 +100,6 @@ class observer
         // =========================
         $user = $DB->get_record('user', ['id' => $userid], '*', MUST_EXIST);
 
-        // Ensure fullname() errors never come
-        $user->firstnamephonetic = $user->firstnamephonetic ?? '';
-        $user->lastnamephonetic  = $user->lastnamephonetic ?? '';
-        $user->middlename        = $user->middlename ?? '';
-        $user->alternatename     = $user->alternatename ?? '';
 
         // =========================
         // 📘 COURSE
@@ -329,7 +261,6 @@ class observer
             $usermessage
         );
     }
-
 
     /**
      * Make mentor if user has teache or editing teacher role

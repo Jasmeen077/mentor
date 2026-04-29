@@ -71,6 +71,24 @@ class helper
         return $teacherdata;
     }
 
+    public static function get_teacher($courseid)
+    {
+        global $DB;
+
+        $teachers = $DB->get_records_sql("
+        SELECT u.*
+        FROM {user} u
+        JOIN {role_assignments} ra ON ra.userid = u.id
+        JOIN {role} r ON r.id = ra.roleid
+        JOIN {context} ctx ON ctx.id = ra.contextid
+        WHERE r.shortname IN ('editingteacher', 'teacher')
+        AND ctx.instanceid = :courseid
+        AND ctx.contextlevel = 50
+    ", ['courseid' => $courseid]);
+
+        return $teachers;
+    }
+
     /**
      * Has teacher role of current user in any enroled courses. 
      * 
