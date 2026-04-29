@@ -39,7 +39,7 @@ class mentor_report extends sql_table
          COUNT(lmr.id) AS totalratings, AVG(lmr.rate) AS rating, MAX(lmr.timecreated) AS last_updated";
 
         $from = "{local_mentor} lm
-                JOIN {local_mentor_rates_log} lmr ON lm.id = lmr.mentor_id
+                LEFT JOIN {local_mentor_rates_log} lmr ON lm.id = lmr.mentor_id
                 JOIN {user} u ON u.id = lm.userid
                 AND u.deleted = 0
                 LEFT JOIN {course} c oN c.id = lm.courseid";
@@ -64,9 +64,8 @@ class mentor_report extends sql_table
 
     public function col_rating($values)
     {
-        return round($values->rating, 2);
+        return $values->rating ? round($values->rating, 2) : 0;
     }
-
 
     public function col_last_updated($values)
     {
@@ -78,7 +77,11 @@ class mentor_report extends sql_table
 
     public function col_actions($values)
     {
-        $url = new moodle_url('/local/mentor/report/mentor_report_details.php', ['userid' => $values->id]);
-        return html_writer::link($url, get_string('viewdetails', 'local_mentor'));
+        if ($values->totalratings) {
+            $url = new moodle_url('/local/mentor/report/mentor_report_details.php', ['userid' => $values->id]);
+            return html_writer::link($url, get_string('viewdetails', 'local_mentor'));
+        } else {
+            return '';
+        }
     }
 }
