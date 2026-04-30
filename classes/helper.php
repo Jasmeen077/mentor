@@ -100,6 +100,10 @@ class helper
         global $DB;
         $courses = enrol_get_users_courses($userid, true, 'id');
 
+        if ($courses == null) {
+            return null;
+        }
+
         list($in_sql, $params) = $DB->get_in_or_equal(array_keys($courses), SQL_PARAMS_NAMED, 'c');
         $sql = "SELECT ctx.instanceid as courseid
                 FROM
