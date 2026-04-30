@@ -22,7 +22,7 @@ if ($ADMIN->fulltree) {
 
     // Set admin email to for recieving all messages copy
     $admins = get_admins();
-    foreach( $admins as $admin ) {
+    foreach ($admins as $admin) {
         $options[$admin->id] = fullname($admin);
     }
 
@@ -43,117 +43,114 @@ if ($ADMIN->fulltree) {
         $choices,
         $choices,
     ));
-
-    // Create messages and subjects for the events and notifications
+    // Role Assigned
     $settings->add(new admin_setting_heading(
         'local_mentor/role_assigned_messages',
-        'Role assigned message templates',
-        'Configure role assigned and unassgined messages templates'
+        get_string('role_assigned_messages', 'local_mentor'),
+        get_string('role_assigned_messages_desc', 'local_mentor')
     ));
 
-    // role assignment settings
     $settings->add(new admin_setting_configtext(
         'local_mentor/role_assigned_subject',
-        'Role assgined subject',
-        'Use variables like {firstname}, {lastname} {coursename}',
-        'Hi {firstname}'
+        get_string('role_assigned_subject', 'local_mentor'),
+        get_string('role_assigned_subject_desc', 'local_mentor'),
+        get_string('role_assigned_subject_template', 'local_mentor')
     ));
 
     $settings->add(new admin_setting_confightmleditor(
         'local_mentor/role_assigned_body',
-        'Role assignement body',
-        'Message body with placeholders like {role}, {firstname}, {lastname}, {email}, {coursename}, {courseid}',
-        'Hi {firstname}, you assigned a new role ({role}) in {coursename}'
+        get_string('role_assigned_body', 'local_mentor'),
+        get_string('role_assigned_body_desc', 'local_mentor'),
+        get_string('role_assigned_body_template', 'local_mentor')
     ));
 
-    // Create messages and subjects for the events and notifications
+
+    // Role Unassigned
     $settings->add(new admin_setting_heading(
         'local_mentor/role_unassigned_messages',
-        'Role unassigned message templates',
-        'Configure role unassigned and unassigned messages templates'
+        get_string('role_unassigned_messages', 'local_mentor'),
+        get_string('role_unassigned_messages_desc', 'local_mentor')
     ));
 
-    // role assignment settings
     $settings->add(new admin_setting_configtext(
         'local_mentor/role_unassigned_subject',
-        'Role unassigned subject',
-        'Use variables like {firstname}, {lastname} {coursename}',
-        'Hi {firstname}'
+        get_string('role_unassigned_subject', 'local_mentor'),
+        get_string('role_unassigned_subject_desc', 'local_mentor'),
+        get_string('role_unassigned_subject_template', 'local_mentor')
     ));
 
     $settings->add(new admin_setting_confightmleditor(
         'local_mentor/role_unassigned_body',
-        'Role unassignement body',
-        'Message body with placeholders like {role}, {firstname}, {lastname}, {email}, {coursename}, {courseid}',
-        'Hi {firstname}, you assigned a new role ({role}) in {coursename}'
+        get_string('role_unassigned_body', 'local_mentor'),
+        get_string('role_unassigned_body_desc', 'local_mentor'),
+        get_string('role_unassigned_body_template', 'local_mentor')
     ));
 
-    // settings for quiz
+
+    // Quiz Completion
     $settings->add(new admin_setting_heading(
         'local_mentor/attempt_submitted_message',
-        'Quiz completion message template',
-        'Configure message shown when a user completes a quiz'
+        get_string('attempt_submitted_message', 'local_mentor'),
+        get_string('attempt_submitted_message_desc', 'local_mentor')
     ));
 
     $settings->add(new admin_setting_configtext(
         'local_mentor/attempt_submitted_subject',
-        'Quiz completion subject',
-        'Use variables like {firstname}, {lastname}, {quizname}, {coursefullname}',
-        'Quiz completed: {quizname}'
+        get_string('attempt_submitted_subject', 'local_mentor'),
+        get_string('attempt_submitted_subject_desc', 'local_mentor'),
+        get_string('attempt_submitted_subject_template', 'local_mentor')
     ));
 
     $settings->add(new admin_setting_confightmleditor(
         'local_mentor/attempt_submitted_body',
-        'Quiz completion message body',
-        'Placeholders: {firstname}, {lastname}, {quizname}, {coursename}, {attemptid}',
-        'Hi {firstname}, congratulations! You have successfully completed the quiz <b>{quizname}</b> in course <b>{coursefullname}</b>. Your final grade is <b>{finalgrade}</b>.'
+        get_string('attempt_submitted_body', 'local_mentor'),
+        get_string('attempt_submitted_body_desc', 'local_mentor'),
+        get_string('attempt_submitted_body_template', 'local_mentor')
     ));
 
-    //settings for assignment
+
+    // Assignment Completion
     $settings->add(new admin_setting_heading(
         'local_mentor/assessable_submitted_message',
-        'Assignment completion message template',
-        'Configure message shown when a user completes an assignment'
+        get_string('assessable_submitted_message', 'local_mentor'),
+        get_string('assessable_submitted_message_desc', 'local_mentor')
     ));
 
     $settings->add(new admin_setting_configtext(
         'local_mentor/assessable_submitted_subject',
-        'Assignment completion subject',
-        'Use variables like {firstname}, {lastname}, {assignmentname}, {coursename}',
-        'Assignment completed: {assignmentname}'
+        get_string('assessable_submitted_subject', 'local_mentor'),
+        get_string('assessable_submitted_subject_desc', 'local_mentor'),
+        get_string('assessable_submitted_subject_template', 'local_mentor')
     ));
 
     $settings->add(new admin_setting_confightmleditor(
         'local_mentor/assessable_submitted_body',
-        'Assignment completion message body',
-        'Placeholders: {firstname}, {lastname}, {assignmentname}, {coursename}, {grade}, {feedback}',
-        'Hi {firstname}, congratulations! You have successfully completed the assignment <b>{assignmentname}</b> in course <b>{coursefullname}</b>. Your grade is <b>{grade}</b>.'
+        get_string('assessable_submitted_body', 'local_mentor'),
+        get_string('assessable_submitted_body_desc', 'local_mentor'),
+        get_string('assessable_submitted_body_template', 'local_mentor')
     ));
 
-    // settings for feedback
-    // $settings->add(new admin_setting_heading(
-    //     'local_mentor/feedback_submission_message',
-    //     'Feedback submission message template',
-    //     'Configure message sent when feedback is submitted'
-    // ));
+    // Feedback Completion
 
-    // $settings->add(new admin_setting_configtext(
-    //     'local_mentor/feedback_submit_subject',
-    //     'Feedback submission subject',
-    //     'Use variables like {firstname}, {lastname}, {coursefullname}',
-    //     'Feedback submitted successfully'
-    // ));
+    $settings->add(new admin_setting_heading(
+        'local_mentor/response_submitted_message',
+        get_string('response_submitted_message', 'local_mentor'),
+        get_string('response_submitted_message_desc', 'local_mentor')
+    ));
 
-    // $settings->add(new admin_setting_confightmleditor(
-    //     'local_mentor/feedback_body',
-    //     'Feedback Email Body',
-    //     'Use placeholders like {firstname}, {lastname}, {coursename}, {activityname}',
-    //     'Dear {firstname},<br><br>
-    //     Your feedback has been successfully submitted in <b>{activityname}</b> of course <b>{coursename}</b>.<br><br>
-    //     Thank you for your participation.<br><br>
-    //     Regards,<br>
-    //     LMS Team'
-    // ));
+    $settings->add(new admin_setting_configtext(
+        'local_mentor/response_submitted_subject',
+        get_string('response_submitted_subject', 'local_mentor'),
+        get_string('response_submitted_subject_desc', 'local_mentor'),
+        get_string('response_submitted_subject_template', 'local_mentor')
+    ));
+
+    $settings->add(new admin_setting_confightmleditor(
+        'local_mentor/response_submitted_body',
+        get_string('response_submitted_body', 'local_mentor'),
+        get_string('response_submitted_body_desc', 'local_mentor'),
+        get_string('response_submitted_body_template', 'local_mentor')
+    ));
 
     $ADMIN->add('localplugins', $settings);
 }

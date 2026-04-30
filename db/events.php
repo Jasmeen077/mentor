@@ -36,4 +36,12 @@ $observers = [
         'eventname' => '\mod_feedback\event\response_submitted',
         'callback'  => '\local_mentor\observer::feedback_submitted',
     ],
+
+    // teacher events
+
+    $observers =
+        [
+            'eventname' => '\core\event\course_updated',
+            'callback'  => '\local_mentor\observer::course_updated',
+        ],
 ];
