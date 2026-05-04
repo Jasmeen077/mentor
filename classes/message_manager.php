@@ -113,28 +113,28 @@ class message_manager
             'attemptid'  => $data['attemptid']
         ];
 
-        self::send('attempt_submitted', $user, $vars);
+        // self::send('attempt_submitted', $user, $vars);
 
-        // $teachers = helper::get_teacher($course->id);
+        $teachers = helper::get_teacher($course->id);
 
-        // if (empty($teachers)) {
-        //     error_log('No teachers found for course ID: ' . $course->id);
-        //     return;
-        // }
+        if (empty($teachers)) {
+            error_log('No teachers found for course ID: ' . $course->id);
+            return;
+        }
 
-        // $uniqueTeachers = [];
-        // foreach ($teachers as $teacher) {
-        //     $uniqueTeachers[$teacher->id] = $teacher;
-        // }
+        $uniqueTeachers = [];
+        foreach ($teachers as $teacher) {
+            $uniqueTeachers[$teacher->id] = $teacher;
+        }
 
-        // foreach ($uniqueTeachers as $teacher) {
+        foreach ($uniqueTeachers as $teacher) {
+            if (empty($teacher->email)) {
+                continue;
+            }
 
-        //     if (empty($teacher->email)) {
-        //         continue;
-        //     }
-
-        //     self::send('quiz_teacher_notification', $teacher, $vars);
-        // }
+            self::send('attempt_submitted', $teacher, $vars);
+            self::notify_admin_users('attempt_submitted', $vars);
+        }
     }
 
     /**
@@ -161,40 +161,82 @@ class message_manager
             'attemptid'      => $data['attemptid'] ?? null
         ];
 
-        self::send('assessable_submitted', $user, $vars);
+        // self::send('assessable_submitted', $user, $vars);
 
-        // $teachers = helper::get_teacher($course->id);
+        $teachers = helper::get_teacher($course->id);
 
-        // if (empty($teachers)) {
-        //     error_log('No teachers found for course ID: ' . $course->id);
-        //     return;
-        // }
+        if (empty($teachers)) {
+            error_log('No teachers found for course ID: ' . $course->id);
+            return;
+        }
 
-        // $uniqueTeachers = [];
-        // foreach ($teachers as $teacher) {
-        //     $uniqueTeachers[$teacher->id] = $teacher;
-        // }
+        $uniqueTeachers = [];
+        foreach ($teachers as $teacher) {
+            $uniqueTeachers[$teacher->id] = $teacher;
+        }
 
-        // foreach ($uniqueTeachers as $teacher) {
+        foreach ($uniqueTeachers as $teacher) {
 
-        //     if (empty($teacher->email)) {
-        //         continue;
-        //     }
+            if (empty($teacher->email)) {
+                continue;
+            }
 
-        //     self::send('assignment_teacher_notification', $teacher, $vars);
-        // }
+            self::send('assessable_submitted', $teacher, $vars);
+            self::notify_admin_users('assessable_submitted', $vars);
+        }
+    }
+
+    /**
+     * Handle Feedback submission messages
+     */
+
+    private static function handle_response_submitted(array $data)
+    {
+        global $DB;
+
+        $user = $DB->get_record('user', ['id' => $data['userid']], '*', MUST_EXIST);
+        $course = $DB->get_record('course', ['id' => $data['courseid']], '*', MUST_EXIST);
+
+        $vars = [
+            'firstname'  => $user->firstname,
+            'lastname'   => $user->lastname,
+            'coursename' => $course->fullname,
+            'response'   => 'Feedback submitted',
+            'submittedon' => date('Y-m-d H:i:s', $data['time'])
+        ];
+
+        $teachers = helper::get_teacher($course->id);
+
+        if (empty($teachers)) {
+            error_log('No teachers found for course ID: ' . $course->id);
+            return;
+        }
+
+        $uniqueTeachers = [];
+        foreach ($teachers as $teacher) {
+            $uniqueTeachers[$teacher->id] = $teacher;
+        }
+
+        foreach ($uniqueTeachers as $teacher) {
+
+            if (empty($teacher->email)) {
+                continue;
+            }
+
+            self::send('response_submitted', $teacher, $vars);
+            self::notify_admin_users('response_submitted', $vars);
+        }
     }
 
     /**
      * CORE SEND FUNCTION
      */
-    private static function send(string $event, \stdClass $user, array $vars)
+    private static function send(string $event, \stdClass $user, array $vars, bool $iscopymsg = false): void
     {
 
         // Load templates from settings
-        $subject = get_config('local_mentor', $event . '_subject');
+        $subject = $iscopymsg ? "Copy: " . get_config('local_mentor', $event . '_subject') : get_config('local_mentor', $event . '_subject');
         $body    = get_config('local_mentor', $event . '_body');
-
         // Replace variables
         $subject = self::replace($subject, $vars);
         $body    = self::replace($body, $vars);
@@ -238,7 +280,7 @@ class message_manager
         list($in_sql, $params) = $DB->get_in_or_equal($adminids, SQL_PARAMS_NAMED, 'u');
         $users = $DB->get_records_sql("SELECT * FROM {user} WHERE id $in_sql", $params);
         foreach ($users as $user) {
-            self::send($event, $user, $vars);
+            self::send($event, $user, $vars, true);
         }
     }
 }
