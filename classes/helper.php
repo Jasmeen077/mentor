@@ -76,14 +76,14 @@ class helper
         global $DB;
 
         $teachers = $DB->get_records_sql("
-        SELECT u.*
+        SELECT DISTINCT u.*
         FROM {user} u
         JOIN {role_assignments} ra ON ra.userid = u.id
         JOIN {role} r ON r.id = ra.roleid
         JOIN {context} ctx ON ctx.id = ra.contextid
         WHERE r.shortname IN ('editingteacher', 'teacher')
         AND ctx.instanceid = :courseid
-        AND ctx.contextlevel = 50
+        AND ctx.contextlevel = " . CONTEXT_COURSE . "
     ", ['courseid' => $courseid]);
 
         return $teachers;
